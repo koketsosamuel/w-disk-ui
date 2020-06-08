@@ -1,32 +1,155 @@
 <template>
-  <div id="app">
-    <div id="nav">
-      <router-link to="/">Home</router-link> |
-      <router-link to="/about">About</router-link>
-    </div>
-    <router-view/>
+  <v-app>
+
+    <input type="file" ref="fileDude" id="" multiple @change="fileSelect()">
+
+    <div>
+    <v-app-bar fixed
+      color="blue accent-4"
+      dense
+      dark
+    >
+      
+
+      <v-toolbar-title>K DISK</v-toolbar-title>
+
+      <v-spacer></v-spacer>
+
+      <v-btn icon>
+        <v-icon>mdi-folder-plus</v-icon>
+      </v-btn>
+
+      <v-btn icon @click="upload()">
+        <v-icon>mdi-upload</v-icon>
+      </v-btn>
+
+      <v-btn icon>
+        <v-icon>mdi-magnify</v-icon>
+      </v-btn>
+
+      <v-menu
+        left
+        bottom
+      >
+        <template v-slot:activator="{ on }">
+          <v-btn icon v-on="on">
+            <v-icon>mdi-dots-vertical</v-icon>
+          </v-btn>
+        </template>
+
+        <v-list>
+          <v-list-item>
+            <v-list-item-title>Settings</v-list-item-title>
+          </v-list-item>
+          <v-list-item>
+            <v-list-item-title>About</v-list-item-title>
+          </v-list-item>
+        </v-list>
+      </v-menu>
+    </v-app-bar>
   </div>
+
+    <v-content>
+
+
+      <router-view/>
+
+    </v-content>
+
+    <v-bottom-navigation fixed
+    
+    dark
+    shift
+  >
+    <v-btn >
+      <span>Back</span>
+      <v-icon>mdi-arrow-left-bold</v-icon>
+    </v-btn>
+
+    <v-btn>
+      <span>Home</span>
+      <v-icon>mdi-home</v-icon>
+    </v-btn>
+
+    <v-btn>
+      <span>Forward</span>
+      <v-icon>mdi-arrow-right-bold</v-icon>
+    </v-btn>
+
+  </v-bottom-navigation>
+
+
+  <!-- UPLOAD DIALOG -->
+  <v-dialog
+        v-model="uploadDialog"
+        scrollable  
+        persistent :overlay="true"
+        transition="dialog-transition"
+    >
+        <v-card color=" darken-3">
+ 
+                <v-card-title primary-title>
+                    Confirm
+                </v-card-title>
+                <v-card-text>
+                  <v-list flat color="yellow">
+                    <v-list-item-group color="blue">
+                      <v-list-item
+                        v-for="(file, i) in files"
+                        :key="i"
+                      >
+                        <v-list-item-content>
+                          <v-list-item-title v-text="file.name"></v-list-item-title>
+                        </v-list-item-content>
+                      </v-list-item>
+                    </v-list-item-group>
+                  </v-list>
+                </v-card-text>
+            <v-card-actions>
+                <v-btn color="green" @click="uploadFiles()">Upload</v-btn>
+                <v-btn color="red" @click="uploadDialog = false">Cancel</v-btn>
+            </v-card-actions>
+        </v-card>
+    </v-dialog>
+
+
+  </v-app>
 </template>
 
-<style>
-#app {
-  font-family: Avenir, Helvetica, Arial, sans-serif;
-  -webkit-font-smoothing: antialiased;
-  -moz-osx-font-smoothing: grayscale;
-  text-align: center;
-  color: #2c3e50;
-}
+<script>
 
-#nav {
-  padding: 30px;
-}
+export default {
+  name: 'App',
 
-#nav a {
-  font-weight: bold;
-  color: #2c3e50;
-}
+  data: () => ({
+    dir: ".",
+    files: [],
+    uploadDialog: false
+  }),
 
-#nav a.router-link-exact-active {
-  color: #42b983;
-}
-</style>
+  methods: {
+    upload() {
+      this.$refs.fileDude.click()
+    },
+    fileSelect() {
+      this.files = this.$refs.fileDude.files
+      this.uploadDialog = true
+    },
+    uploadFiles() {
+      let fd = new FormData()
+      fd.append("dir", this.$history[this.$history.length - 1])
+
+      for(let i = 0; i < this.files; i++) {
+        
+      }
+
+    }
+  },
+
+  created() {
+    this.$cookies.set("dir", ".")
+    this.$history.push(".")
+    //console.log(this.$history)
+  }
+};
+</script>
