@@ -4,7 +4,7 @@
           <v-list-item-group color="primary">
                 <v-list-item color="red" v-for="i in list" :key="i.name" @click="navigate(i)">
                    
-                    <v-list-item-icon v-if="i.type == 'folder'">
+                    <v-list-item-icon v-if="i.folder">
                         <v-icon>mdi-folder</v-icon>
                     </v-list-item-icon>
                     <v-list-item-icon v-else>
@@ -26,20 +26,20 @@
 
                             <v-list>
 
-                                <v-list-item @click="navigate(i)" v-if="i.type = 'folder'">
+                                <v-list-item @click="navigate(i)" v-if="i.folder">
                                     <v-list-item-title>Open</v-list-item-title>
                                 </v-list-item>
-                                <v-list-item v-if="getFileType(i.name) == 'music'">
+                                <!-- <v-list-item v-else-if="getFileType(i.name) == 'music'">
                                     <v-list-item-title>Play</v-list-item-title>
                                 </v-list-item>
-                                <v-list-item v-if="getFileType(i.name) == 'video'">
+                                <v-list-item v-else-if="getFileType(i.name) == 'video'">
                                     <v-list-item-title>Play</v-list-item-title>
-                                </v-list-item>
-                                <v-list-item v-if="getFileType(i.name) == 'image'">
-                                    <v-list-item-title>Open</v-list-item-title>
-                                </v-list-item>
-                                <v-list-item @click="dir = i.dir; dialog = true;">
-                                    <v-list-item-title>Delete</v-list-item-title>
+                                </v-list-item> 
+                                <v-list-item v-else-if="getFileType(i.name) == 'image'">
+                                    <v-list-item-title>View</v-list-item-title>
+                                </v-list-item> -->
+                                <v-list-item @click="item = i; name = i.name; renameDialog = true;">
+                                    <v-list-item-title>Rename</v-list-item-title>
                                 </v-list-item>
                                 <v-list-item>
                                     <v-list-item-title>Details</v-list-item-title>
@@ -82,6 +82,27 @@
         </v-card>
     </v-dialog>
 
+    <v-dialog
+        v-model="renameDialog"
+        scrollable  
+        persistent :overlay="true"
+        transition="dialog-transition"
+    >
+        <v-card color=" darken-3">
+ 
+            <v-card-title primary-title>
+                Rename
+            </v-card-title>
+            <v-card-text>
+                <v-text-field solo text v-model="name"></v-text-field>
+            </v-card-text>
+            <v-card-actions>
+                <v-btn color="green" @click="rename()">Yes</v-btn>
+                <v-btn color="red" @click="renameDialog = false">No</v-btn>
+            </v-card-actions>
+        </v-card>
+    </v-dialog>
+
   </v-container>
 </template>
 
@@ -92,11 +113,14 @@ export default {
         resMsg: "",
         snackBar: false,
         dialog: false,
-        dir: ""
+        renameDialog: false,
+        dir: "",
+        item: {},
+        name: ""
     }),
 
     methods: {
-        getFileType(file) {
+        getFileType(file = "") {
 
             let image = ["jpg", "png", "gif","webp", "tiff", "jpeg", "ico", "svg"]
             let video = ["mp4", "3gp", "webm", "mkv", "avi", "mov"]
@@ -135,7 +159,7 @@ export default {
                 index = this.list.length - 1 - i
                 item = this.list[index]
 
-                if(item.type == "folder") {
+                if(item.folder) {
                     folderItem.folders.push(item)
                     //this.list.splice(index, 1)
                 } else {
@@ -186,7 +210,7 @@ export default {
 
             this.$history.push(i.dir)
 
-            if(i.type == "folder") {
+            if(i.folder) {
            
                 this.$router.push("/explore/"+(this.$history.length))
                 
@@ -213,9 +237,24 @@ export default {
             let res = await this.$axios.post("/explore", {dir: this.$history[Number(this.$route.params.n) - 1]})
         
             if(!res.data.error) {
-                this.list = await res.data.list
+                
+                for(let i = 0; i < res.data.dirs.length; i++) {
+                    this.list[i] = await JSON.parse( res.data.dirs[i])
+                }
+
                 this.sortList()
             }
+
+        },
+
+        async rename() {
+
+            // let fileExt = this.item.name.split(".")
+            // fileExt = fileExt[fileExt.length - 1] || ""
+            // let dir = await this.$history[this.$history.length - 1]
+            // let newDir = this.name + fileExt
+            // let res = await this.$axios.post("/rename", {dir, newDir})
+            console.log(this.item)
 
         }
 
@@ -233,8 +272,9 @@ export default {
 
             let index = Number(this.$route.params.n) - 1
 
-            if(index == 0) {
-                this.$history = ["."]
+            if((index+1) < this.$history.length) {
+                this.$history.pop()
+                alert("pop")
             }
 
             if(index < 0 || index >= this.$history.length) {
@@ -244,7 +284,7 @@ export default {
                 let res = await this.$axios.post("/explore", {dir: this.$history[index]})
 
                 if(!res.data.error) {
-                    this.list = await res.data.list
+                    this.list = res.data.dirs
                     this.sortList()
                 } else {
                     this.list = []

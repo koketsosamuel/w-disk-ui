@@ -15,7 +15,7 @@
 
       <v-spacer></v-spacer>
 
-      <v-btn icon>
+      <v-btn icon @click="newFolderDialog = true">
         <v-icon>mdi-folder-plus</v-icon>
       </v-btn>
 
@@ -112,6 +112,32 @@
         </v-card>
     </v-dialog>
 
+    <!-- NEW FOLDER -->
+    <v-dialog
+        v-model="newFolderDialog"
+        scrollable  
+        persistent :overlay="true"
+        transition="dialog-transition"
+    >
+        <v-card color=" darken-3">
+ 
+            <v-card-title primary-title>
+                New Folder
+            </v-card-title>
+                
+            <v-text-field
+            label="Filled"
+            placeholder="Placeholder"
+            filled
+            v-model="newDir"
+          ></v-text-field>
+
+            <v-card-actions>
+                <v-btn color="green" @click="createFolder()">Create</v-btn>
+                <v-btn color="red" @click="newFolderDialog = false">Cancel</v-btn>
+            </v-card-actions>
+        </v-card>
+    </v-dialog>
 
   </v-app>
 </template>
@@ -124,7 +150,9 @@ export default {
   data: () => ({
     dir: ".",
     files: [],
-    uploadDialog: false
+    uploadDialog: false,
+    newFolderDialog: false,
+    newDir: "new folder"
   }),
 
   methods: {
@@ -135,21 +163,33 @@ export default {
       this.files = this.$refs.fileDude.files
       this.uploadDialog = true
     },
-    uploadFiles() {
+    async uploadFiles() {
+      
       let fd = new FormData()
       fd.append("dir", this.$history[this.$history.length - 1])
 
-      for(let i = 0; i < this.files; i++) {
-        
+      for(let i = 0; i < this.files.length; i++) {
+        fd.append("files", this.files[i], this.files[i].name)
       }
+
+      this.uploadDialog = false
+      let res = await this.$axios.post("/upload", fd)
+      console.log(res)
+
+    },
+
+    async createFolder() {
+
+      let dir = this.$history[this.$history.length - 1]
+      let res = await this.$axios.post("/makefolder", {dir, newDir: this.newDir})
+      console.log(res)
+      this.newDir = "new folder"
 
     }
   },
 
   created() {
-    this.$cookies.set("dir", ".")
     this.$history.push(".")
-    //console.log(this.$history)
   }
 };
 </script>

@@ -2,6 +2,7 @@
   
   <v-container :fluid="true">
 
+<br>
     <v-sheet color="blue darken-3">
         <h1><v-icon  size="100" color="black">mdi-harddisk</v-icon> Storage  <small class="">40% used</small></h1>
         <v-progress-linear height="30" value="40" color="green" rounded>
